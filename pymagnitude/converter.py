@@ -82,7 +82,7 @@ def convert(input_file_path, output_file_path=None,
             subword_start=DEFAULT_NGRAM_BEG,
             subword_end=DEFAULT_NGRAM_END,
             approx=False, approx_trees=None,
-            vocab_path=None):
+            vocab_path=None, unicode_errors='strict'):
 
     files_to_remove = []
     subword = int(subword)
@@ -185,7 +185,7 @@ def convert(input_file_path, output_file_path=None,
             raise ImportError("You need gensim >= 3.3.0 installed with pip \
                 (`pip install gensim`) to convert binary files.")
         keyed_vectors = KeyedVectors.load_word2vec_format(
-            input_file_path, binary=input_is_binary)
+            input_file_path, binary=input_is_binary, unicode_errors=unicode_errors)
         number_of_keys = len(keyed_vectors.vectors)
         dimensions = len(keyed_vectors.vectors[0])
     elif input_is_text:
@@ -599,6 +599,11 @@ more space, but makes approximate most similar queries more accurate)"))
         "-v", "--vocab", type=str,
         help=("path to a `.magnitude` file to use as a vocabulary when \
 converting vocabulary-less models like ELMo."))
+    parser.add_argument(
+        "-e", "--unicode-errors", type=str, default="strict",
+        choices=["strict", "ignore", "replace"],
+        help=("how to handle Unicode errors in the embedding file, see \
+https://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.load_word2vec_format"))
     args = parser.parse_args()
 
     input_file_path = os.path.expanduser(args.input)
@@ -610,6 +615,7 @@ converting vocabulary-less models like ELMo."))
     approx = args.approx
     approx_trees = args.trees if hasattr(args, 'trees') else None
     vocab_path = os.path.expanduser(args.vocab) if args.vocab else args.vocab
+    unicode_errors = args.unicode_errors
 
     if os.path.isdir(input_file_path) and os.path.isdir(output_file_path):
         for file in os.listdir(input_file_path):
@@ -627,11 +633,13 @@ converting vocabulary-less models like ELMo."))
                         precision=precision, subword=subword,
                         subword_start=subword_start,
                         subword_end=subword_end,
-                        approx=approx, approx_trees=approx_trees)
+                        approx=approx, approx_trees=approx_trees,
+                        unicode_errors=unicode_errors)
     else:
         convert(input_file_path, output_file_path,
                 precision=precision, subword=subword,
                 subword_start=subword_start,
                 subword_end=subword_end,
                 approx=approx, approx_trees=approx_trees,
-                vocab_path=vocab_path)
+                vocab_path=vocab_path,
+                unicode_errors=unicode_errors)
